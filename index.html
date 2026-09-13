@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <meta name="description" content="Free Lifestyle & Wellness Assessment Survey — English & Telugu" />
+  <meta name="theme-color" content="#2E7D32" />
+  <title>Lifestyle &amp; Wellness Assessment | జీవనశైలి &amp; వెల్‌నెస్ అంచనా</title>
+
+  <!-- Google Fonts: Poppins + Noto Sans Telugu -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,600&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ======================================================
+       LANGUAGE SELECTION SCREEN (shown on first load)
+  ====================================================== -->
+  <div id="lang-select-screen" class="lang-select-screen" role="dialog" aria-modal="true" aria-label="Choose your language">
+    <div class="lang-select-inner">
+      <div class="lang-select-logo">
+        <span class="leaf-icon" aria-hidden="true">🌿</span>
+      </div>
+      <h1 class="lang-select-title">Choose Your Language</h1>
+      <p class="lang-select-sub">మీ భాషను ఎంచుకోండి</p>
+      <div class="lang-select-buttons">
+        <button class="lang-btn" id="btn-lang-en" onclick="selectLanguage('en')" aria-label="Select English">
+          <span class="lang-flag">🇬🇧</span>
+          <span class="lang-name">English</span>
+        </button>
+        <button class="lang-btn" id="btn-lang-te" onclick="selectLanguage('te')" aria-label="Select Telugu">
+          <span class="lang-flag">🇮🇳</span>
+          <span class="lang-name">తెలుగు</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================
+       MAIN APPLICATION WRAPPER
+  ====================================================== -->
+  <div id="app" class="app hidden" aria-live="polite">
+
+    <!-- HEADER -->
+    <header class="app-header" role="banner">
+      <div class="header-inner">
+        <div class="header-brand">
+          <span class="header-leaf" aria-hidden="true">🌿</span>
+          <span class="header-title" id="header-brand-text"></span>
+        </div>
+        <nav class="lang-switcher" aria-label="Language switcher">
+          <button class="lang-switch-btn" id="sw-en" onclick="setLanguage('en')" aria-pressed="false">English</button>
+          <span class="lang-divider" aria-hidden="true">|</span>
+          <button class="lang-switch-btn" id="sw-te" onclick="setLanguage('te')" aria-pressed="false">తెలుగు</button>
+        </nav>
+      </div>
+    </header>
+
+    <!-- LANDING PAGE (content rendered by JS) -->
+    <main id="landing-page" class="page" role="main"></main>
+
+    <!-- SURVEY FORM -->
+    <main id="survey-page" class="page hidden" role="main">
+      <div class="survey-wrapper">
+        <!-- Progress -->
+        <div class="progress-container" aria-label="Survey progress">
+          <div class="progress-header">
+            <span class="progress-label" id="progress-label"></span>
+            <span class="progress-pct" id="progress-pct"></span>
+          </div>
+          <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="progress-bar-wrapper">
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+        </div>
+
+        <!-- Step Content -->
+        <div id="step-container" aria-live="polite"></div>
+
+        <!-- Navigation -->
+        <div class="nav-buttons" id="nav-buttons">
+          <button class="btn btn-secondary" id="btn-prev" onclick="prevStep()" aria-label="Previous step"></button>
+          <button class="btn btn-primary" id="btn-next" onclick="nextStep()" aria-label="Next step"></button>
+        </div>
+      </div>
+    </main>
+
+    <!-- RESULT PAGE (content rendered by JS) -->
+    <main id="result-page" class="page hidden" role="main" aria-live="polite">
+      <div id="result-container"></div>
+    </main>
+
+  </div><!-- /#app -->
+
+  <!-- Scripts -->
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
