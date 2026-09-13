@@ -13,6 +13,7 @@ const TOTAL_STEPS = 5;
 
 const formData = {
   date: '', name: '', age: '', gender: '', contact: '',
+  surveyDoneBy: '',
   q1: '', q2: '', q3: '', q4: '',
   q5: [], q5Other: '',
   q6: '', q7: '', q8: '',
@@ -95,6 +96,8 @@ const T = {
     placeholderAge: 'e.g. 28',
     placeholderContact: '10-digit mobile number',
     placeholderTime: 'e.g. 10 AM – 12 PM',
+    fieldSurveyDoneBy: 'Survey Done By',
+    placeholderSurveyDoneBy: 'Name of the person conducting the survey',
 
     // Questions
     questions: {
@@ -270,6 +273,7 @@ const T = {
     guidanceBanner: 'You requested a FREE Wellness Guidance Session — we\'ll reach out soon!',
     callLabel: 'Call Moulika',
     whatsappLabel: 'WhatsApp Moulika',
+    sendResultLabel: 'Send My Results to WhatsApp',
     shareLabel: 'Share Your Result',
 
     // Error / loading
@@ -383,6 +387,8 @@ const T = {
     placeholderAge: 'ఉదా: 28',
     placeholderContact: '10 అంకెల మొబైల్ నంబర్',
     placeholderTime: 'ఉదా: ఉదయం 10 – మధ్యాహ్నం 12',
+    fieldSurveyDoneBy: 'సర్వే నిర్వహించినవారు',
+    placeholderSurveyDoneBy: 'సర్వే నిర్వహించిన వ్యక్తి పేరు',
 
     questions: {
       q1: {
@@ -551,6 +557,7 @@ const T = {
     guidanceBanner: 'మీరు ఉచిత వెల్‌నెస్ మార్గదర్శకత్వ సెషన్ అభ్యర్థించారు — మేము త్వరలో సంప్రదిస్తాం!',
     callLabel: 'మౌళికకు కాల్ చేయండి',
     whatsappLabel: 'మౌళికకు వాట్సాప్ చేయండి',
+    sendResultLabel: 'నా ఫలితాలను వాట్సాప్‌కు పంపండి',
     shareLabel: 'మీ ఫలితం షేర్ చేయండి',
 
     errorMessage: 'మీ సమాధానాలను సేవ్ చేయలేకపోయాము. దయచేసి మీ ఇంటర్నెట్ కనెక్షన్‌ను తనిఖీ చేసి మళ్లీ ప్రయత్నించండి.',
@@ -859,6 +866,11 @@ function buildStep1(card, L) {
     type: 'tel', label: L.fieldContact, value: formData.contact,
     placeholder: L.placeholderContact, required: true, inputmode: 'numeric',
     onChange: v => { formData.contact = v; }
+  }));
+  card.appendChild(makeField('surveyDoneBy', 'input', {
+    type: 'text', label: L.fieldSurveyDoneBy, value: formData.surveyDoneBy,
+    placeholder: L.placeholderSurveyDoneBy, required: false,
+    onChange: v => { formData.surveyDoneBy = v; }
   }));
 }
 
@@ -1320,6 +1332,7 @@ function submitSurvey() {
     age: formData.age,
     gender: formData.gender,
     contact: formData.contact.trim(),
+    surveyDoneBy: formData.surveyDoneBy.trim(),
     q1: formData.q1, q2: formData.q2, q3: formData.q3, q4: formData.q4,
     q5: formData.q5.join(', '), q5Other: formData.q5Other,
     q6: formData.q6, q7: formData.q7, q8: formData.q8,
@@ -1404,6 +1417,32 @@ function retrySubmit() {
   const banner = document.getElementById('submit-error-banner');
   if (banner) banner.remove();
   submitSurvey();
+}
+
+// ── Build WhatsApp "send results to self" URL ──────────────────
+function buildWhatsAppResultUrl(scores, responseId) {
+  const isTe = currentLang === 'te';
+  const band = scores.overall >= 70
+    ? (isTe ? 'అద్భుతంగా ఉంది 🌟' : 'Great job 🌟')
+    : scores.overall >= 45
+    ? (isTe ? 'మెరుగుపరచవచ్చు 🌱' : 'Room to improve 🌱')
+    : (isTe ? 'దృష్టి పెట్టాలి 💪' : 'Needs attention 💪');
+
+  const L = T[currentLang];
+  const focusLines = scores.focusAreas.map((key, i) => {
+    const fa = L.focusAreas[key] || L.focusAreas.overall;
+    return `${i + 1}. ${fa.icon} ${fa.title}`;
+  }).join('\n');
+
+  const msg = isTe
+    ? `🌿 *జీవనశైలి & వెల్‌నెస్ అంచనా ఫలితం*\n\nపేరు: ${formData.name}\nతేదీ: ${formData.date}\n\n🏆 వెల్‌నెస్ స్కోర్: *${scores.overall}/100*\n${band}\n\n📊 డొమైన్ స్కోర్లు:\n• వ్యాయామం: ${scores.activityScore}/100\n• ఆహారం: ${scores.dietScore}/100\n• నిద్ర: ${scores.sleepScore}/100\n• నీరు: ${scores.hydrationScore}/100\n• శక్తి: ${scores.energyScore}/100\n\n🎯 దృష్టి పెట్టాల్సిన అంశాలు:\n${focusLines}\n\n${responseId ? `Response ID: ${responseId}\n\n` : ''}📞 *కాల్‌బ్యాక్ అభ్యర్థన*\nదయచేసి ${CONFIG.contactName} (${CONFIG.phone}) నన్ను తిరిగి సంప్రదించమని అభ్యర్థిస్తున్నాను.\n\nధన్యవాదాలు! 🌿`
+    : `🌿 *Lifestyle & Wellness Assessment Result*\n\nName: ${formData.name}\nDate: ${formData.date}\n\n🏆 Wellness Score: *${scores.overall}/100*\n${band}\n\n📊 Domain Scores:\n• Exercise: ${scores.activityScore}/100\n• Diet: ${scores.dietScore}/100\n• Sleep: ${scores.sleepScore}/100\n• Hydration: ${scores.hydrationScore}/100\n• Energy: ${scores.energyScore}/100\n\n🎯 Top Focus Areas:\n${focusLines}\n\n${responseId ? `Response ID: ${responseId}\n\n` : ''}📞 *Callback Request*\nKindly request ${CONFIG.contactName} (${CONFIG.phone}) to call me back.\n\nThank you! 🌿`;
+
+  // Send to customer's own WhatsApp — they keep a copy of their results
+  const raw = formData.contact.trim().replace(/\D/g, '');
+  const phone = raw.length === 10 ? '91' + raw : raw;
+
+  return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
 }
 
 // ── Result Screen ──────────────────────────────────────────────
@@ -1503,6 +1542,8 @@ function renderResult(scores, responseId) {
             <a class="btn btn-call" href="tel:${CONFIG.phone}">📞 ${escHtml(L.callLabel)}</a>
             <a class="btn btn-whatsapp" href="https://wa.me/${CONFIG.whatsapp}" target="_blank" rel="noopener noreferrer">💬 ${escHtml(L.whatsappLabel)}</a>
           </div>
+
+          <a class="btn btn-send-result" href="${buildWhatsAppResultUrl(scores, responseId)}" target="_blank" rel="noopener noreferrer">📲 ${escHtml(L.sendResultLabel)}</a>
 
           ${responseId ? `<p class="response-id">Response ID: ${responseId}</p>` : ''}
         </div>
