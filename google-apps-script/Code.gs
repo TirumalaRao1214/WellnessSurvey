@@ -9,7 +9,7 @@
  *
  * Sheet columns (in order):
  *   Timestamp | ResponseID | Language | Date | Name | Age | Gender
- *   Contact | Q1 | Q2 | Q3 | Q4 | Q5 | Q5Other | Q6 | Q7 | Q8
+ *   Contact | SurveyDoneBy | Q1 | Q2 | Q3 | Q4 | Q5 | Q5Other | Q6 | Q7 | Q8
  *   Q9 | Q9Other | Q10 | GuidanceRequested | PreferredMode
  *   PreferredTime | OverallScore | ActivityScore | DietScore
  *   HydrationScore | SleepScore | EnergyScore
@@ -85,6 +85,7 @@ function doPost(e) {
       data.age           || '',                  // Age
       data.gender        || '',                  // Gender
       (data.contact      || '').trim(),          // Contact
+      (data.surveyDoneBy || '').trim(),          // SurveyDoneBy
       data.q1            || '',                  // Q1
       data.q2            || '',                  // Q2
       data.q3            || '',                  // Q3
@@ -171,7 +172,7 @@ function createSheet(ss) {
 
   const headers = [
     'Timestamp', 'ResponseID', 'Language', 'Date', 'Name', 'Age',
-    'Gender', 'Contact', 'Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q5Other',
+    'Gender', 'Contact', 'SurveyDoneBy', 'Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q5Other',
     'Q6', 'Q7', 'Q8', 'Q9', 'Q9Other', 'Q10',
     'GuidanceRequested', 'PreferredMode', 'PreferredTime',
     'OverallScore', 'ActivityScore', 'DietScore', 'HydrationScore',
