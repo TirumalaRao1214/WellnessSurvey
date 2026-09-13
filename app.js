@@ -1422,21 +1422,116 @@ function retrySubmit() {
 // ── Build WhatsApp "send results to self" URL ──────────────────
 function buildWhatsAppResultUrl(scores, responseId) {
   const isTe = currentLang === 'te';
-  const band = scores.overall >= 70
-    ? (isTe ? 'అద్భుతంగా ఉంది 🌟' : 'Great job 🌟')
-    : scores.overall >= 45
-    ? (isTe ? 'మెరుగుపరచవచ్చు 🌱' : 'Room to improve 🌱')
-    : (isTe ? 'దృష్టి పెట్టాలి 💪' : 'Needs attention 💪');
 
   const L = T[currentLang];
+
+  // Emoji constants defined early so bandLine can use them too
+  const E = {
+    plant:    '\uD83C\uDF3F', // 🌿
+    sparkles: '\u2728',       // ✨
+    chart:    '\uD83D\uDCCA', // 📊
+    target:   '\uD83C\uDFAF', // 🎯
+    phone:    '\uD83D\uDCDE', // 📞
+    notepad:  '\uD83D\uDCCB', // 📋
+    person:   '\uD83D\uDC64', // 👤
+    mobile:   '\uD83D\uDCF1', // 📱
+    speech:   '\uD83D\uDCAC', // 💬
+    blossom:  '\uD83C\uDF38', // 🌸
+    wave:     '\uD83D\uDC4B', // 👋
+    run:      '\uD83C\uDFC3', // 🏃
+    salad:    '\uD83E\uDD57', // 🥗
+    sleep:    '\uD83D\uDE34', // 😴
+    drop:     '\uD83D\uDCA7', // 💧
+    bolt:     '\u26A1',       // ⚡
+    star:     '\uD83C\uDF1F', // 🌟
+    flex:     '\uD83D\uDCAA', // 💪
+    seedling: '\uD83C\uDF31', // 🌱
+  };
+
+  // Score band — inline encouragement sentence
+  const bandLine = scores.overall >= 70
+    ? (isTe
+        ? `మీరు చాలా బాగా చేస్తున్నారు! మీ జీవనశైలి అద్భుతంగా ఉంది. దాన్ని కొనసాగించండి! ${E.star}`
+        : `You're doing great! Your lifestyle is in excellent shape. Keep it up! ${E.star}`)
+    : scores.overall >= 45
+    ? (isTe
+        ? `మెరుగుపడే అవకాశం ఖచ్చితంగా ఉంది, మరియు చిన్న, స్థిరమైన జీవనశైలి మార్పులు గణనీయమైన తేడా తీసుకొస్తాయి. ${E.flex}${E.seedling}`
+        : `There's definitely room for improvement, and the good news is that small, consistent lifestyle changes can make a meaningful difference. ${E.flex}${E.seedling}`)
+    : (isTe
+        ? `మీ ఆరోగ్యానికి తక్షణ శ్రద్ధ అవసరం, కానీ సరైన అడుగులతో మీరు ఖచ్చితంగా మెరుగుపడతారు! ${E.flex}`
+        : `Your wellness needs some attention, but with the right steps you can absolutely turn it around! ${E.flex}`);
+
   const focusLines = scores.focusAreas.map((key, i) => {
     const fa = L.focusAreas[key] || L.focusAreas.overall;
     return `${i + 1}. ${fa.icon} ${fa.title}`;
   }).join('\n');
 
-  const msg = isTe
-    ? `🌿 *జీవనశైలి & వెల్‌నెస్ అంచనా ఫలితం*\n\nపేరు: ${formData.name}\nతేదీ: ${formData.date}\n\n🏆 వెల్‌నెస్ స్కోర్: *${scores.overall}/100*\n${band}\n\n📊 డొమైన్ స్కోర్లు:\n• వ్యాయామం: ${scores.activityScore}/100\n• ఆహారం: ${scores.dietScore}/100\n• నిద్ర: ${scores.sleepScore}/100\n• నీరు: ${scores.hydrationScore}/100\n• శక్తి: ${scores.energyScore}/100\n\n🎯 దృష్టి పెట్టాల్సిన అంశాలు:\n${focusLines}\n\n${responseId ? `Response ID: ${responseId}\n\n` : ''}📞 *కాల్‌బ్యాక్ అభ్యర్థన*\nదయచేసి ${CONFIG.contactName} (${CONFIG.phone}) నన్ను తిరిగి సంప్రదించమని అభ్యర్థిస్తున్నాను.\n\nధన్యవాదాలు! 🌿`
-    : `🌿 *Lifestyle & Wellness Assessment Result*\n\nName: ${formData.name}\nDate: ${formData.date}\n\n🏆 Wellness Score: *${scores.overall}/100*\n${band}\n\n📊 Domain Scores:\n• Exercise: ${scores.activityScore}/100\n• Diet: ${scores.dietScore}/100\n• Sleep: ${scores.sleepScore}/100\n• Hydration: ${scores.hydrationScore}/100\n• Energy: ${scores.energyScore}/100\n\n🎯 Top Focus Areas:\n${focusLines}\n\n${responseId ? `Response ID: ${responseId}\n\n` : ''}📞 *Callback Request*\nKindly request ${CONFIG.contactName} (${CONFIG.phone}) to call me back.\n\nThank you! 🌿`;
+  let msg;
+  if (isTe) {
+    msg =
+`${E.plant} *జీవనశైలి & వెల్‌నెస్ అంచనా – మీ ఫలితం*
+
+నమస్కారం ${formData.name}! ${E.wave}
+
+మీ వెల్‌నెస్ అంచనా పూర్తి చేసినందుకు ధన్యవాదాలు.
+
+${E.sparkles} *మీ వెల్‌నెస్ స్కోర్: ${scores.overall}/100*
+${bandLine}
+
+${E.chart} *మీ డొమైన్ స్కోర్లు:*
+* ${E.run} వ్యాయామం: ${scores.activityScore}/100
+* ${E.salad} ఆహారం: ${scores.dietScore}/100
+* ${E.sleep} నిద్ర: ${scores.sleepScore}/100
+* ${E.drop} నీరు: ${scores.hydrationScore}/100
+* ${E.bolt} శక్తి: ${scores.energyScore}/100
+
+${E.target} *మీ ముఖ్యమైన దృష్టి అంశాలు:*
+
+${focusLines}
+
+మీ ఫలితాలను చర్చించి, మీ జీవనశైలి మరియు లక్ష్యాల ఆధారంగా సరళమైన, ఆచరణాత్మక ప్రణాళిక రూపొందిద్దాం.
+
+${E.phone} అనుకూలమైన సమయంలో నాకు తిరిగి కాల్ చేయమని మనవి.
+
+${E.notepad} *సంప్రదింపు వివరాలు:*
+${E.person} ${CONFIG.contactName}
+${E.mobile} కాల్: ${CONFIG.phone}
+${E.speech} వాట్సాప్: wa.me/${CONFIG.whatsapp}
+
+${E.blossom} మీ వెల్‌నెస్ ప్రయాణం ఒక్క చిన్న అడుగుతో మొదలవుతుంది!${responseId ? `\n\nResponse ID: ${responseId}` : ''}`;
+  } else {
+    msg =
+`${E.plant} *Lifestyle & Wellness Assessment – Your Result*
+
+Hi ${formData.name}! ${E.wave}
+
+Thank you for taking the time to complete your Wellness Assessment.
+
+${E.sparkles} *Your Wellness Score: ${scores.overall}/100*
+${bandLine}
+
+${E.chart} *Your Domain Scores:*
+* ${E.run} Exercise: ${scores.activityScore}/100
+* ${E.salad} Diet: ${scores.dietScore}/100
+* ${E.sleep} Sleep: ${scores.sleepScore}/100
+* ${E.drop} Hydration: ${scores.hydrationScore}/100
+* ${E.bolt} Energy: ${scores.energyScore}/100
+
+${E.target} *Your Top Focus Areas:*
+
+${focusLines}
+
+Let's discuss your results and create a simple, practical plan based on your lifestyle and goals.
+
+${E.phone} Kindly call me back when convenient.
+
+${E.notepad} *Contact Details:*
+${E.person} ${CONFIG.contactName}
+${E.mobile} Call: ${CONFIG.phone}
+${E.speech} WhatsApp: wa.me/${CONFIG.whatsapp}
+
+${E.blossom} Your wellness journey starts with one small step!${responseId ? `\n\nResponse ID: ${responseId}` : ''}`;
+  }
 
   // Send to customer's own WhatsApp — they keep a copy of their results
   const raw = formData.contact.trim().replace(/\D/g, '');
