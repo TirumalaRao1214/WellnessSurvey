@@ -1319,6 +1319,18 @@ function calculateScores(fd) {
   return { overall, activityScore, dietScore, sleepScore, hydrationScore, energyScore, focusAreas };
 }
 
+// ── Client-side Response ID (sequential via localStorage) ──────
+function generateClientResponseId() {
+  const today = new Date();
+  const ymd = today.getFullYear().toString() +
+              String(today.getMonth() + 1).padStart(2, '0') +
+              String(today.getDate()).padStart(2, '0');
+  const storageKey = 'wl_rid_' + ymd;
+  const counter = parseInt(localStorage.getItem(storageKey) || '0', 10) + 1;
+  localStorage.setItem(storageKey, String(counter));
+  return 'WL-' + ymd + '-' + String(counter).padStart(4, '0');
+}
+
 // ── Submission ─────────────────────────────────────────────────
 function submitSurvey() {
   const scores = calculateScores(formData);
@@ -1365,45 +1377,26 @@ function submitSurvey() {
     return;
   }
 
-  // Google Apps Script returns JSON with the server-generated responseId.
-  // We use a two-step fetch: first POST to the script URL (which redirects),
-  // then follow the redirect. Since GAS redirects POST→GET we submit via a
-  // URLSearchParams body so the redirect carries the data, but GAS reads
-  // postData from the original POST. The cleanest approach is to POST with
-  // Content-Type text/plain and follow redirects — the script's doPost reads
-  // the body before the redirect, writes the sheet, and returns JSON.
-  // We use mode:'cors' so we can read the response body for the responseId.
+  // Google Apps Script redirects POST requests which causes CORS errors when
+  // trying to read the response. Use no-cors (opaque) so the POST always
+  // succeeds and the sheet is written server-side. Generate a sequential
+  // client-side Response ID using localStorage so it increments consistently.
+  const rid = generateClientResponseId();
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 15000);
 
   fetch(CONFIG.googleScriptUrl, {
     method: 'POST',
-    mode: 'cors',
+    mode: 'no-cors',
     headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify(payload),
-    signal: controller.signal,
-    redirect: 'follow'
+    signal: controller.signal
   })
-    .then(res => {
+    .then(() => {
       clearTimeout(timeoutId);
-      // Try to parse JSON to get the server-assigned responseId
-      return res.text().then(text => {
-        let rid = null;
-        try {
-          const json = JSON.parse(text);
-          if (json && json.responseId) rid = json.responseId;
-        } catch (_) { /* non-JSON response — fall through */ }
-        // Fall back to a client-side ID if server ID unavailable
-        if (!rid) {
-          const today = new Date();
-          const ymd = today.getFullYear().toString() +
-                      String(today.getMonth() + 1).padStart(2, '0') +
-                      String(today.getDate()).padStart(2, '0');
-          rid = 'WL-' + ymd + '-' + String(Math.floor(Math.random() * 9000) + 1000);
-        }
-        showPage('result-page');
-        renderResult(scores, rid);
-      });
+      showPage('result-page');
+      renderResult(scores, rid);
     })
     .catch(err => {
       clearTimeout(timeoutId);
