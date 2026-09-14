@@ -261,7 +261,9 @@ const T = {
       selectAtLeastOne: 'Please select at least one option.',
       otherRequired: 'Please describe your choice.',
       guidanceRequired: 'Please let us know if you\'d like guidance.',
-      modeRequired: 'Please select a preferred mode.'
+      modeRequired: 'Please select a preferred mode.',
+      surveyDoneByRequired: 'Please enter the name of the person conducting the survey.',
+      timeRequired: 'Please enter a preferred time slot.'
     },
 
     // Result page
@@ -546,7 +548,9 @@ const T = {
       selectAtLeastOne: 'దయచేసి కనీసం ఒక ఎంపికను ఎంచుకోండి.',
       otherRequired: 'దయచేసి మీ ఎంపికను వివరించండి.',
       guidanceRequired: 'మీకు మార్గదర్శకత్వం కావాలా అని తెలియజేయండి.',
-      modeRequired: 'దయచేసి మీకు నచ్చే విధానాన్ని ఎంచుకోండి.'
+      modeRequired: 'దయచేసి మీకు నచ్చే విధానాన్ని ఎంచుకోండి.',
+      surveyDoneByRequired: 'దయచేసి సర్వే నిర్వహించిన వ్యక్తి పేరు నమోదు చేయండి.',
+      timeRequired: 'దయచేసి మీకు నచ్చే సమయాన్ని నమోదు చేయండి.'
     },
 
     thankYou: 'ధన్యవాదాలు',
@@ -869,7 +873,7 @@ function buildStep1(card, L) {
   }));
   card.appendChild(makeField('surveyDoneBy', 'input', {
     type: 'text', label: L.fieldSurveyDoneBy, value: formData.surveyDoneBy,
-    placeholder: L.placeholderSurveyDoneBy, required: false,
+    placeholder: L.placeholderSurveyDoneBy, required: true,
     onChange: v => { formData.surveyDoneBy = v; }
   }));
 }
@@ -956,7 +960,7 @@ function buildStep5(card, L) {
 
   modeSection.appendChild(makeField('preferredTime', 'input', {
     type: 'text', label: L.preferredTimeLabel, value: formData.preferredTime,
-    placeholder: L.placeholderTime, required: false,
+    placeholder: L.placeholderTime, required: true,
     onChange: v => { formData.preferredTime = v; }
   }));
 
@@ -1205,6 +1209,7 @@ function validateStep(n) {
     if (!formData.gender) fail('gender', V.genderRequired);
     if (!formData.contact.trim()) fail('contact', V.contactRequired);
     else if (!/^\d{10}$/.test(formData.contact.trim())) fail('contact', V.contactInvalid);
+    if (!formData.surveyDoneBy.trim()) fail('surveyDoneBy', V.surveyDoneByRequired);
   }
   if (n === 2) {
     ['q1', 'q2', 'q3', 'q4'].forEach(qk => {
@@ -1225,8 +1230,9 @@ function validateStep(n) {
   }
   if (n === 5) {
     if (!formData.guidanceRequested) fail('guidance', V.guidanceRequired);
-    if ((formData.guidanceRequested === 'Yes' || formData.guidanceRequested === 'Maybe') && !formData.preferredMode) {
-      fail('preferredMode', V.modeRequired);
+    if (formData.guidanceRequested === 'Yes' || formData.guidanceRequested === 'Maybe') {
+      if (!formData.preferredMode) fail('preferredMode', V.modeRequired);
+      if (!formData.preferredTime.trim()) fail('preferredTime', V.timeRequired);
     }
   }
   return valid;
@@ -1359,32 +1365,45 @@ function submitSurvey() {
     return;
   }
 
-  // Google Apps Script redirects POST requests, which causes CORS errors
-  // in browsers when called from localhost or cross-origin pages.
-  // Solution: use no-cors mode (opaque response) — we cannot read the
-  // response body, so we show the result optimistically after the fetch
-  // succeeds. The data is still written to the Sheet server-side.
+  // Google Apps Script returns JSON with the server-generated responseId.
+  // We use a two-step fetch: first POST to the script URL (which redirects),
+  // then follow the redirect. Since GAS redirects POST→GET we submit via a
+  // URLSearchParams body so the redirect carries the data, but GAS reads
+  // postData from the original POST. The cleanest approach is to POST with
+  // Content-Type text/plain and follow redirects — the script's doPost reads
+  // the body before the redirect, writes the sheet, and returns JSON.
+  // We use mode:'cors' so we can read the response body for the responseId.
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 15000);
 
   fetch(CONFIG.googleScriptUrl, {
     method: 'POST',
-    mode: 'no-cors',                       // prevents CORS block on redirect
-    headers: { 'Content-Type': 'text/plain' }, // no-cors only allows simple headers
+    mode: 'cors',
+    headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify(payload),
-    signal: controller.signal
+    signal: controller.signal,
+    redirect: 'follow'
   })
-    .then(() => {
-      // Opaque response — fetch succeeded, Sheet write happened server-side.
-      // Generate a client-side response ID for display.
+    .then(res => {
       clearTimeout(timeoutId);
-      const today = new Date();
-      const ymd   = today.getFullYear().toString() +
-                    String(today.getMonth() + 1).padStart(2, '0') +
-                    String(today.getDate()).padStart(2, '0');
-      const rid   = 'WL-' + ymd + '-' + String(Math.floor(Math.random() * 9000) + 1000);
-      showPage('result-page');
-      renderResult(scores, rid);
+      // Try to parse JSON to get the server-assigned responseId
+      return res.text().then(text => {
+        let rid = null;
+        try {
+          const json = JSON.parse(text);
+          if (json && json.responseId) rid = json.responseId;
+        } catch (_) { /* non-JSON response — fall through */ }
+        // Fall back to a client-side ID if server ID unavailable
+        if (!rid) {
+          const today = new Date();
+          const ymd = today.getFullYear().toString() +
+                      String(today.getMonth() + 1).padStart(2, '0') +
+                      String(today.getDate()).padStart(2, '0');
+          rid = 'WL-' + ymd + '-' + String(Math.floor(Math.random() * 9000) + 1000);
+        }
+        showPage('result-page');
+        renderResult(scores, rid);
+      });
     })
     .catch(err => {
       clearTimeout(timeoutId);
