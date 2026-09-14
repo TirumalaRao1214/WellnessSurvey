@@ -7,7 +7,7 @@ const CONFIG = {
   contactName: "Moulika",
   phone: "6302552079",
   whatsapp: "916302552079",
-  googleScriptUrl: "https://script.google.com/macros/s/AKfycbz75LfT6yfr3FIz1KsQHWMhQ85bdcS4qkfav3SEXyo4vDAwy1D9v9UYhrqXLU--jW7G/exec", // <-- Paste your Google Apps Script Web App URL here
+  googleScriptUrl: "https://script.google.com/macros/s/AKfycbzodhxp11d5S2tehrXQ_g9mVELVjLL4ak8NKiYL7xGarYYot6OLeC7t567bwgYPJO6v/exec",
   defaultLanguage: "en",
   surveyDuration: "2–3 minutes",
   langStorageKey: "wellness_lang",
