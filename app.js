@@ -1510,7 +1510,7 @@ ${E.person} ${CONFIG.contactName}
 ${E.mobile} కాల్: ${CONFIG.phone}
 ${E.speech} వాట్సాప్: wa.me/${CONFIG.whatsapp}
 
-${E.blossom} మీ వెల్‌నెస్ ప్రయాణం ఒక్క చిన్న అడుగుతో మొదలవుతుంది!${responseId ? `\n\nResponse ID: ${responseId}` : ''}`;
+${E.blossom} మీ వెల్‌నెస్ ప్రయాణం ఒక్క చిన్న అడుగుతో మొదలవుతుంది!`;
   } else {
     msg =
 `${E.plant} *Lifestyle & Wellness Assessment – Your Result*
@@ -1542,7 +1542,7 @@ ${E.person} ${CONFIG.contactName}
 ${E.mobile} Call: ${CONFIG.phone}
 ${E.speech} WhatsApp: wa.me/${CONFIG.whatsapp}
 
-${E.blossom} Your wellness journey starts with one small step!${responseId ? `\n\nResponse ID: ${responseId}` : ''}`;
+${E.blossom} Your wellness journey starts with one small step!`;
   }
 
   // Send to customer's own WhatsApp — they keep a copy of their results
@@ -1652,7 +1652,6 @@ function renderResult(scores, responseId) {
 
           <a class="btn btn-send-result" href="${buildWhatsAppResultUrl(scores, responseId)}" target="_blank" rel="noopener noreferrer">📲 ${escHtml(L.sendResultLabel)}</a>
 
-          ${responseId ? `<p class="response-id">Response ID: ${responseId}</p>` : ''}
         </div>
       </div>
     </div>`;
