@@ -9,11 +9,11 @@
  *
  * Sheet columns (in order):
  *   Timestamp | ResponseID | Language | Date | Name | Age | Gender
- *   Contact | SurveyDoneBy | Q1 | Q2 | Q3 | Q4 | Q5 | Q5Other | Q6 | Q7 | Q8
+ *   Contact | Q1 | Q2 | Q3 | Q4 | Q5 | Q5Other | Q6 | Q7 | Q8
  *   Q9 | Q9Other | Q10 | GuidanceRequested | PreferredMode
  *   PreferredTime | OverallScore | ActivityScore | DietScore
  *   HydrationScore | SleepScore | EnergyScore
- *   FocusArea1 | FocusArea2 | FocusArea3 | SubmissionStatus
+ *   FocusArea1 | FocusArea2 | FocusArea3 | SubmissionStatus | SurveyDoneBy
  * ================================================================
  */
 
@@ -85,7 +85,6 @@ function doPost(e) {
       data.age           || '',                  // Age
       data.gender        || '',                  // Gender
       (data.contact      || '').trim(),          // Contact
-      (data.surveyDoneBy || '').trim(),          // SurveyDoneBy
       data.q1            || '',                  // Q1
       data.q2            || '',                  // Q2
       data.q3            || '',                  // Q3
@@ -110,7 +109,8 @@ function doPost(e) {
       data.focusArea1    || '',                  // FocusArea1
       data.focusArea2    || '',                  // FocusArea2
       data.focusArea3    || '',                  // FocusArea3
-      'Submitted'                                // SubmissionStatus
+      'Submitted',                               // SubmissionStatus
+      (data.surveyDoneBy || '').trim()           // SurveyDoneBy
     ];
 
     // ── Write to Sheet ─────────────────────────────────────
@@ -172,12 +172,12 @@ function createSheet(ss) {
 
   const headers = [
     'Timestamp', 'ResponseID', 'Language', 'Date', 'Name', 'Age',
-    'Gender', 'Contact', 'SurveyDoneBy', 'Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q5Other',
+    'Gender', 'Contact', 'Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q5Other',
     'Q6', 'Q7', 'Q8', 'Q9', 'Q9Other', 'Q10',
     'GuidanceRequested', 'PreferredMode', 'PreferredTime',
     'OverallScore', 'ActivityScore', 'DietScore', 'HydrationScore',
     'SleepScore', 'EnergyScore',
-    'FocusArea1', 'FocusArea2', 'FocusArea3', 'SubmissionStatus'
+    'FocusArea1', 'FocusArea2', 'FocusArea3', 'SubmissionStatus', 'SurveyDoneBy'
   ];
 
   sheet.appendRow(headers);
